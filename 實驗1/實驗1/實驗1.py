@@ -1,10 +1,13 @@
 ﻿import random
 import os
 from time import sleep
+
+"""
 from rich.console import Console
 from rich.align import Align
 from rich.text import Text
 from rich.panel import Panel
+"""
 
 # 定義除錯
 DEBUG_WORLD = True
@@ -30,7 +33,9 @@ class 生態環境物品類別:
 
 
 class 營養類別(生態環境物品類別):
-    生成植物機率 = 50  # 生成植物的機率預設為 10%
+    最大植物生成機率 = 2
+    最小植物生成機率 = 0
+    生成植物機率 = 2  # 生成植物的機率預設為 2%
 
     def __init__(self):
         super().__init__()
@@ -55,13 +60,22 @@ class 植物類別(生態環境物品類別):
         self.形狀 = "$"
 
 
+class 腐化植物類別(生態環境物品類別):
+    最大生命期 = 10  # 腐化植物的存活時間, 幾個輪迴
+
+    def __init__(self):
+        super().__init__()
+        self.目前生命 = 0
+        self.形狀 = "@"
+
+
 class 地圖類別:
     count_map = 0
 
     def __init__(self):
         self.格子 = []
         self.產生空白地圖()
-        self.console = Console(width=N_WORLD + 4, height=N_WORLD + 2)
+        # self.console = Console(width=N_WORLD + 4, height=N_WORLD + 2)
 
     def 產生空白地圖(self):
         for x in range(N_WORLD):
@@ -126,6 +140,7 @@ class 世界類別:
         self.生成全新營養列表()
         self.植物列表 = []
         self.植物涵蓋率 = 0
+        self.腐化植物列表 = []
 
     def 產生空世界(self):
         self.格子 = []
@@ -147,14 +162,6 @@ class 世界類別:
         for x in range(N_WORLD):
             for y in range(N_WORLD):
                 self.在格子生成營養(x, y)
-                """
-                亂數 = random.randint(1, 100)
-                if 亂數 <= self.營養生成機率:
-                    新的營養 = 營養類別()
-                    self.格子[x][y] = 新的營養
-                    新的營養.設定位置(x, y)
-                    self.營養列表.append(新的營養)
-                    """
 
     def 更新地圖顯示(self):
         self.地圖.清除地圖()
@@ -164,6 +171,9 @@ class 世界類別:
         for 植物 in self.植物列表:
             x, y = 植物.位置()
             self.地圖.設定(x, y, 植物.形狀)
+        for 腐化植物 in self.腐化植物列表:
+            x, y = 腐化植物.位置()
+            self.地圖.設定(x, y, 腐化植物.形狀)
         self.地圖.顯示()
 
     def 空地生成營養(self):
@@ -192,10 +202,16 @@ class 世界類別:
             self.營養生成機率 -= 1
             if self.營養生成機率 < 世界類別.最小營養生成機率:
                 self.營養生成機率 = 世界類別.最小營養生成機率
+            營養類別.生成植物機率 -= 1
+            if 營養類別.生成植物機率<營養類別.最小植物生成機率:
+                營養類別.生成植物機率=營養類別.最小植物生成機率
         else:
             self.營養生成機率 += 1
             if self.營養生成機率 > 世界類別.最大營養生成機率:
                 self.營養生成機率 = 世界類別.最大營養生成機率
+            營養類別.生成植物機率+=1
+            if 營養類別.生成植物機率>營養類別.最大植物生成機率:
+                營養類別.生成植物機率=營養類別.最大植物生成機率
 
     def 處理植物死亡(self):
         刪除植物列表 = []
@@ -204,9 +220,23 @@ class 世界類別:
             if 植物.目前生命 > 植物類別.最大生命期:
                 刪除植物列表.append(植物)
                 x, y = 植物.位置()
-                self.格子[x][y] = -1
+                腐化植物 = 腐化植物類別()
+                腐化植物.設定位置(x, y)
+                self.格子[x][y] = 腐化植物
+                self.腐化植物列表.append(腐化植物)
         for 植物 in 刪除植物列表:
             self.植物列表.remove(植物)
+
+    def 處理腐化植物死亡(self):
+        刪除腐化植物列表 = []
+        for 腐化植物 in self.腐化植物列表:
+            腐化植物.目前生命 += 1  # 更新腐化植物目前生命
+            if 腐化植物.目前生命 > 腐化植物類別.最大生命期:
+                刪除腐化植物列表.append(腐化植物)
+                x, y = 腐化植物.位置()
+                self.格子[x][y] = -1
+        for 腐化植物 in 刪除腐化植物列表:
+            self.腐化植物列表.remove(腐化植物)
 
     def 更新世界(self):
         self.更新地圖顯示()
@@ -215,6 +245,7 @@ class 世界類別:
         self.更新植物涵蓋率()
         self.空地生成營養()
         self.處理植物死亡()
+        self.處理腐化植物死亡()
 
 
 世界 = 世界類別()
