@@ -30,10 +30,28 @@ class 營養類別(生態環境物品類別):
         super().__init__()
         self.x = random.randint(0, N_WORLD - 1)  # 隨機生成 (x,y) 位置
         self.y = random.randint(0, N_WORLD - 1)
-        self.形狀 = "."
+        self.形狀 = "[green].[/]"
+
+    def 生成植物(self):
+        亂數 = random.randint(1, 100)
+        if 亂數 <= 營養類別.生成植物機率:
+            return True
+        else:
+            return False
+
+
+class 植物類別(生態環境物品類別):
+    生命期 = 50  # 植物的生存長度, 幾個輪迴
+
+    def __init__(self):
+        super().__init__()
+        self.目前生命 = 0
+        self.形狀 = "[green]$[/]"
 
 
 class 地圖類別:
+    count_map = 0
+
     def __init__(self):
         self.格子 = []
         self.產生空白地圖()
@@ -59,19 +77,22 @@ class 地圖類別:
         for x in range(N_WORLD):
             一行字串 = ""
             for y in range(N_WORLD):
-                一行字串 = 一行字串 + "[green]"+self.格子[x][y]+"[/]"
+                一行字串 = 一行字串 + self.格子[x][y]
             顯示地圖字串 = 顯示地圖字串 + 一行字串 + "\n"
 
         # 以下程式是用 rich console 顯示出地圖(各個格子的形狀字元)
         with self.console.screen("white on green") as screen:
             self.console.clear()
+            self.console.print("迴圈 = ", 地圖類別.count_map)
+            self.console.print(
+                "植物覆蓋率 = ", round(len(世界.植物列表) / N_WORLD / N_WORLD * 100, 2), " %"
+            )
             text = Align.center(
-                Text.from_markup(
-                    顯示地圖字串, justify="center"
-                ),
+                Text.from_markup(顯示地圖字串, justify="center"),
                 vertical="middle",
             )
             screen.update(Panel(text))
+            地圖類別.count_map += 1
             sleep(0.2)
 
 
@@ -82,6 +103,7 @@ class 世界類別:
         self.營養生成機率 = 25  # 初始生成機率為 25% , 以植物含蓋率 30% 動態調整此機率
         self.營養列表 = []
         self.生成營養列表()
+        self.植物列表 = []
 
     def 產生空世界(self):
         self.格子 = []
@@ -103,14 +125,30 @@ class 世界類別:
                     self.營養列表.append(新的營養)
 
     def 更新世界(self):
+        # 更新地圖顯示
         self.地圖.清除地圖()
         for 營養 in self.營養列表:
             x, y = 營養.位置()
             self.地圖.設定(x, y, 營養.形狀)
+        for 植物 in self.植物列表:
+            植物.目前生命 += 1
+            x, y = 植物.位置()
+            self.地圖.設定(x, y, 植物.形狀)
         self.地圖.顯示()
+        # 下一輪改變, 營養生成植物?
+        刪除營養列表 = []
+        for 營養 in self.營養列表:
+            生成植物 = 營養.生成植物()
+            if 生成植物:
+                刪除營養列表.append(營養)
+                新植物 = 植物類別()
+                新植物.x, 新植物.y = 營養.位置()
+                self.植物列表.append(新植物)
+        for 營養 in 刪除營養列表:
+            self.營養列表.remove(營養)
 
 
 世界 = 世界類別()
-while count_world_pass < 1000:
+while count_world_pass < 10000:
     世界.更新世界()
     count_world_pass += 1
