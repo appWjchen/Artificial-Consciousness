@@ -111,16 +111,18 @@ class 腐化植物分解者類別(生態環境物品類別):
     def 移動(self):
         global 腐化植物分解者進行分解數
         new_x, new_y = self.隨機移動傳回新位置()
-        # 判斷移動到的格子是否為空地或腐化植物
-        if 世界.格子[new_x][new_y] == -1:
-            世界.格子[new_x][new_y] = self
-            世界.格子[self.x][self.y] = -1
-            self.x = new_x
-            self.y = new_y
-        elif 世界.格子[new_x][new_y].形狀 == "@":
-            腐化植物 = 世界.格子[new_x][new_y]
-            世界.格子[new_x][new_y] = self
-            世界.格子[self.x][self.y] = -1
+        # 判斷移動到的地面格子是否為空地或腐化植物
+        if 世界.地面格子[new_x][new_y] == -1 or 世界.地面格子[new_x][new_y].形狀 == ".":
+            if 世界.地上格子[new_x][new_y] == -1:
+                世界.地上格子[new_x][new_y] = self
+                世界.地上格子[self.x][self.y] = -1
+                self.x = new_x
+                self.y = new_y
+        elif 世界.地面格子[new_x][new_y].形狀 == "@" and 世界.地上格子[new_x][new_y] == -1:
+            腐化植物 = 世界.地面格子[new_x][new_y]
+            世界.地面格子[new_x][new_y] = -1
+            世界.地上格子[new_x][new_y] = self
+            世界.地上格子[self.x][self.y] = -1
             世界.腐化植物列表.remove(腐化植物)
             self.x = new_x
             self.y = new_y
@@ -206,25 +208,29 @@ class 世界類別:
         self.隨機生成腐化植物分解者()
 
     def 產生空世界(self):
-        self.格子 = []
+        self.地面格子 = []
+        self.地上格子 = []
         for x in range(N_WORLD_HEIGHT):
-            一排格子 = []
+            一排地面格子 = []
+            一排地上格子 = []
             for y in range(N_WORLD_WIDTH):
-                一排格子.append(-1)
-            self.格子.append(一排格子)
+                一排地面格子.append(-1)
+                一排地上格子.append(-1)
+            self.地面格子.append(一排地面格子)
+            self.地上格子.append(一排地上格子)
 
-    def 在格子生成草地(self, x, y):
+    def 在地面格子生成草地(self, x, y):
         亂數 = random.randint(1, 100)
         if 亂數 <= 世界類別.草地生成機率:
             新的草地 = 草地類別()
-            self.格子[x][y] = 新的草地
+            self.地面格子[x][y] = 新的草地
             新的草地.設定位置(x, y)
             self.草地列表.append(新的草地)
 
     def 生成全新草地列表(self):
         for x in range(N_WORLD_HEIGHT):
             for y in range(N_WORLD_WIDTH):
-                self.在格子生成草地(x, y)
+                self.在地面格子生成草地(x, y)
 
     def 更新地圖顯示(self):
         self.地圖.清除地圖()
@@ -245,8 +251,8 @@ class 世界類別:
     def 空地生成草地(self):
         for x in range(N_WORLD_HEIGHT):
             for y in range(N_WORLD_WIDTH):
-                if self.格子[x][y] == -1:  # 是否為空地
-                    self.在格子生成草地(x, y)
+                if self.地面格子[x][y] == -1:  # 是否為空地
+                    self.在地面格子生成草地(x, y)
 
     def 草地生成植物(self):
         刪除草地列表 = []
@@ -257,7 +263,7 @@ class 世界類別:
                 新植物 = 植物類別()
                 x, y = 草地.位置()
                 新植物.設定位置(x, y)
-                self.格子[x][y] = 新植物
+                self.地面格子[x][y] = 新植物
                 self.植物列表.append(新植物)
         for 草地 in 刪除草地列表:
             self.草地列表.remove(草地)
@@ -292,7 +298,7 @@ class 世界類別:
                 x, y = 植物.位置()
                 腐化植物 = 腐化植物類別()
                 腐化植物.設定位置(x, y)
-                self.格子[x][y] = 腐化植物
+                self.地面格子[x][y] = 腐化植物
                 self.腐化植物列表.append(腐化植物)
         for 植物 in 刪除植物列表:
             self.植物列表.remove(植物)
@@ -304,7 +310,7 @@ class 世界類別:
             if 腐化植物.目前生命 > 腐化植物類別.最大生命期:
                 刪除腐化植物列表.append(腐化植物)
                 x, y = 腐化植物.位置()
-                self.格子[x][y] = -1
+                self.地面格子[x][y] = -1
         for 腐化植物 in 刪除腐化植物列表:
             self.腐化植物列表.remove(腐化植物)
 
@@ -314,8 +320,8 @@ class 世界類別:
         while len(self.腐化植物分解者列表) < N_WORLD_HEIGHT:
             腐化植物分解者 = 腐化植物分解者類別()
             x, y = 腐化植物分解者.位置()
-            if self.格子[x][y] == -1:
-                self.格子[x][y] = 腐化植物分解者
+            if self.地面格子[x][y] == -1:
+                self.地上格子[x][y] = 腐化植物分解者
                 self.腐化植物分解者列表.append(腐化植物分解者)
             不超過100迴圈計數 += 1
             if 不超過100迴圈計數 > 100:
