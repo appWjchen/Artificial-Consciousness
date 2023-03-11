@@ -1,6 +1,7 @@
 ﻿import random
 import os
 from time import sleep
+from 生態環境物品類別 import 草地類別, 植物類別, 腐化植物類別, 腐化植物分解者類別
 
 """
 from rich.console import Console
@@ -9,145 +10,26 @@ from rich.text import Text
 from rich.panel import Panel
 """
 
-# 定義除錯
-DEBUG_WORLD = True
-SLEEP_TIME = 0.2
-
-# 定義世界的格子數為 N_WORLD_HEIGHT(x) * N_WORLD_WIDTH(y)
-N_WORLD_WIDTH = 80
-N_WORLD_HEIGHT = 20
-腐化植物分解者進行分解數 = 0
-
-
-class 生態環境物品類別:
-    def __init__(self, 世界):
-        self.x = 0
-        self.y = 0
-        self.形狀 = " "
-        self.世界 = 世界
-
-    def 位置(self):
-        return self.x, self.y
-
-    def 設定位置(self, x, y):
-        self.x = x
-        self.y = y
-
-    def 隨機移動傳回新位置(self):
-        new_x = self.x
-        new_y = self.y
-        行為 = random.randint(1, 5)
-        if 行為 == 1:  # 向上
-            new_x = new_x - 1
-            new_y = new_y
-        elif 行為 == 2:  # 向下
-            new_x = new_x + 1
-            new_y = new_y
-        elif 行為 == 3:  # 向右
-            new_x = new_x
-            new_y = new_y + 1
-        elif 行為 == 4:  # 向左
-            new_x = new_x
-            new_y = new_y - 1
-        else:  # 不動
-            pass
-        # 超過上邊回到最下邊, 超過最下邊回到最上邊
-        if new_x < 0:
-            new_x = N_WORLD_HEIGHT - 1
-        elif new_x >= N_WORLD_HEIGHT:
-            new_x = 0
-        # 超過右邊回到最左邊, 超過最左邊回到最右邊
-        if new_y < 0:
-            new_y = N_WORLD_WIDTH - 1
-        elif new_y >= N_WORLD_WIDTH:
-            new_y = 0
-        return new_x, new_y
-
-
-class 草地類別(生態環境物品類別):
-    最大植物生成機率 = 2
-    最小植物生成機率 = 0
-    生成植物機率 = 2  # 生成植物的機率預設為 2%
-
-    def __init__(self, 世界):
-        super().__init__(世界)
-        # self.x = random.randint(0, N_WORLD_HEIGHT - 1)  # 隨機生成 (x,y) 位置
-        # self.y = random.randint(0, N_WORLD_WIDTH - 1)
-        self.形狀 = "."
-
-    def 生成植物(self):
-        亂數 = random.randint(1, 100)
-        if 亂數 <= 草地類別.生成植物機率:
-            return True
-        else:
-            return False
-
-
-class 植物類別(生態環境物品類別):
-    最大生命期 = 20  # 植物的存活時間, 幾個輪迴
-
-    def __init__(self, 世界):
-        super().__init__(世界)
-        self.目前生命 = 0
-        self.形狀 = "$"
-
-
-class 腐化植物類別(生態環境物品類別):
-    最大生命期 = 10  # 腐化植物的存活時間, 幾個輪迴
-
-    def __init__(self, 世界):
-        super().__init__(世界)
-        self.目前生命 = 0
-        self.形狀 = "@"
-
-
-class 腐化植物分解者類別(生態環境物品類別):
-    def __init__(self, 世界):
-        super().__init__(世界)
-        self.x = random.randint(0, N_WORLD_HEIGHT - 1)  # 隨機生成 (x,y) 位置, 小心重複位置
-        self.y = random.randint(0, N_WORLD_WIDTH - 1)
-        self.形狀 = "M"
-
-    def 移動(self):
-        global 腐化植物分解者進行分解數
-        new_x, new_y = self.隨機移動傳回新位置()
-        # 判斷移動到的地面格子是否為空地或腐化植物
-        if self.世界.地面格子[new_x][new_y] == -1 or self.世界.地面格子[new_x][new_y].形狀 == ".":
-            if self.世界.地上格子[new_x][new_y] == -1:
-                self.世界.地上格子[new_x][new_y] = self
-                self.世界.地上格子[self.x][self.y] = -1
-                self.x = new_x
-                self.y = new_y
-        elif self.世界.地面格子[new_x][new_y].形狀 == "@" and self.世界.地上格子[new_x][new_y] == -1:
-            腐化植物 = self.世界.地面格子[new_x][new_y]
-            self.世界.地面格子[new_x][new_y] = -1
-            self.世界.地上格子[new_x][new_y] = self
-            self.世界.地上格子[self.x][self.y] = -1
-            self.世界.腐化植物列表.remove(腐化植物)
-            self.x = new_x
-            self.y = new_y
-            腐化植物分解者進行分解數 += 1
-
 
 class 地圖類別:
     count_map = 0
 
     def __init__(self, 世界):
+        self.世界 = 世界
         self.地圖格子 = []
         self.產生空白地圖()
-        self.世界 = 世界
         # self.console = Console(width=N_WORLD + 4, height=N_WORLD + 2)
 
     def 產生空白地圖(self):
-        for x in range(N_WORLD_HEIGHT):
+        for x in range(self.世界.N_WORLD_HEIGHT):
             一排格子 = []
-            for y in range(N_WORLD_WIDTH):
+            for y in range(self.世界.N_WORLD_WIDTH):
                 一排格子.append(" ")
             self.地圖格子.append(一排格子)
 
     def 清除地圖(self):
-        for x in range(N_WORLD_HEIGHT):
-            for y in range(N_WORLD_WIDTH):
+        for x in range(self.世界.N_WORLD_HEIGHT):
+            for y in range(self.世界.N_WORLD_WIDTH):
                 self.地圖格子[x][y] = " "
 
     def 設定(self, x, y, 形狀):
@@ -155,9 +37,9 @@ class 地圖類別:
 
     def 顯示(self):
         顯示地圖字串 = ""
-        for x in range(N_WORLD_HEIGHT):
+        for x in range(self.世界.N_WORLD_HEIGHT):
             一行字串 = ""
-            for y in range(N_WORLD_WIDTH):
+            for y in range(self.世界.N_WORLD_WIDTH):
                 一行字串 = 一行字串 + self.地圖格子[x][y]
             顯示地圖字串 = 顯示地圖字串 + 一行字串 + "\n"
 
@@ -175,9 +57,9 @@ class 地圖類別:
             round(self.世界.腐化植物涵蓋率, 2),
             " %",
         )
-        print("腐化植物分解者進行分解數 = ", 腐化植物分解者進行分解數)
+        print("腐化植物分解者進行分解數 = ", self.世界.腐化植物分解者進行分解數)
         print(顯示地圖字串)
-        sleep(SLEEP_TIME)
+        sleep(self.世界.SLEEP_TIME)
         """
         # 以下程式是用 rich console 顯示出地圖(各個格子的形狀字元)
         with self.console.screen() as screen:
@@ -205,6 +87,14 @@ class 世界類別:
     預設植物涵蓋率 = 5
 
     def __init__(self):
+        # 定義除錯
+        self.DEBUG_WORLD = True
+        self.SLEEP_TIME = 0.2
+
+        # 定義世界的格子數為 N_WORLD_HEIGHT(x) * N_WORLD_WIDTH(y)
+        self.N_WORLD_WIDTH = 80
+        self.N_WORLD_HEIGHT = 20
+        self.腐化植物分解者進行分解數 = 0
         self.產生空世界()
         self.地圖 = 地圖類別(self)
         self.草地列表 = []
@@ -221,10 +111,10 @@ class 世界類別:
     def 產生空世界(self):
         self.地面格子 = []
         self.地上格子 = []
-        for x in range(N_WORLD_HEIGHT):
+        for x in range(self.N_WORLD_HEIGHT):
             一排地面格子 = []
             一排地上格子 = []
-            for y in range(N_WORLD_WIDTH):
+            for y in range(self.N_WORLD_WIDTH):
                 一排地面格子.append(-1)
                 一排地上格子.append(-1)
             self.地面格子.append(一排地面格子)
@@ -239,8 +129,8 @@ class 世界類別:
             self.草地列表.append(新的草地)
 
     def 生成全新草地列表(self):
-        for x in range(N_WORLD_HEIGHT):
-            for y in range(N_WORLD_WIDTH):
+        for x in range(self.N_WORLD_HEIGHT):
+            for y in range(self.N_WORLD_WIDTH):
                 self.在地面格子生成草地(x, y)
 
     def 更新地圖顯示(self):
@@ -260,8 +150,8 @@ class 世界類別:
         self.地圖.顯示()
 
     def 空地生成草地(self):
-        for x in range(N_WORLD_HEIGHT):
-            for y in range(N_WORLD_WIDTH):
+        for x in range(self.N_WORLD_HEIGHT):
+            for y in range(self.N_WORLD_WIDTH):
                 if self.地面格子[x][y] == -1:  # 是否為空地
                     self.在地面格子生成草地(x, y)
 
@@ -280,9 +170,9 @@ class 世界類別:
             self.草地列表.remove(草地)
 
     def 更新涵蓋率(self):
-        self.植物涵蓋率 = len(self.植物列表) / N_WORLD_HEIGHT / N_WORLD_WIDTH * 100
-        self.草地涵蓋率 = len(self.草地列表) / N_WORLD_HEIGHT / N_WORLD_WIDTH * 100
-        self.腐化植物涵蓋率 = len(self.腐化植物列表) / N_WORLD_HEIGHT / N_WORLD_WIDTH * 100
+        self.植物涵蓋率 = len(self.植物列表) / self.N_WORLD_HEIGHT / self.N_WORLD_WIDTH * 100
+        self.草地涵蓋率 = len(self.草地列表) / self.N_WORLD_HEIGHT / self.N_WORLD_WIDTH * 100
+        self.腐化植物涵蓋率 = len(self.腐化植物列表) / self.N_WORLD_HEIGHT / self.N_WORLD_WIDTH * 100
         if self.植物涵蓋率 >= 世界類別.預設植物涵蓋率:
             草地類別.生成植物機率 -= 1
             if 草地類別.生成植物機率 < 草地類別.最小植物生成機率:
@@ -329,7 +219,7 @@ class 世界類別:
     def 隨機生成腐化植物分解者(self):
         不超過100迴圈計數 = 0
         # 若一直沒有空間生成 N_WORLD_HEIGHT 個腐化植物分解者, 迴圈將不停止
-        while len(self.腐化植物分解者列表) < N_WORLD_HEIGHT:
+        while len(self.腐化植物分解者列表) < self.N_WORLD_HEIGHT:
             腐化植物分解者 = 腐化植物分解者類別(self)
             x, y = 腐化植物分解者.位置()
             if self.地面格子[x][y] == -1:
