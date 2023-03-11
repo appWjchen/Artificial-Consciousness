@@ -164,7 +164,15 @@ class 地圖類別:
         print("迴圈 = ", count_world_pass)
         print("草地數量 = ", len(世界.草地列表), ", 植物數量 = ", len(世界.植物列表))
         print(
-            "植物覆蓋率 = ", round(世界.植物涵蓋率, 2), " %", ", 草地涵蓋率 = ", round(世界.草地涵蓋率, 2), " %"
+            "植物覆蓋率 = ",
+            round(世界.植物涵蓋率, 2),
+            " %",
+            ", 草地涵蓋率 = ",
+            round(世界.草地涵蓋率, 2),
+            " %",
+            "腐化植物覆蓋率 = ",
+            round(世界.腐化植物涵蓋率, 2),
+            " %",
         )
         print("腐化植物分解者進行分解數 = ", 腐化植物分解者進行分解數)
         print(顯示地圖字串)
@@ -204,6 +212,7 @@ class 世界類別:
         self.植物列表 = []
         self.植物涵蓋率 = 0
         self.腐化植物列表 = []
+        self.腐化植物涵蓋率 = 0
         self.腐化植物分解者列表 = []  # 保持個數 = N_WORLD_HEIGHT
         self.隨機生成腐化植物分解者()
 
@@ -268,9 +277,10 @@ class 世界類別:
         for 草地 in 刪除草地列表:
             self.草地列表.remove(草地)
 
-    def 更新植物涵蓋率(self):
+    def 更新涵蓋率(self):
         self.植物涵蓋率 = len(世界.植物列表) / N_WORLD_HEIGHT / N_WORLD_WIDTH * 100
         self.草地涵蓋率 = len(世界.草地列表) / N_WORLD_HEIGHT / N_WORLD_WIDTH * 100
+        self.腐化植物涵蓋率 = len(世界.腐化植物列表) / N_WORLD_HEIGHT / N_WORLD_WIDTH * 100
         if self.植物涵蓋率 >= 世界類別.預設植物涵蓋率:
             草地類別.生成植物機率 -= 1
             if 草地類別.生成植物機率 < 草地類別.最小植物生成機率:
@@ -332,10 +342,10 @@ class 世界類別:
             腐化植物分解者.移動()
 
     def 更新世界(self):
+        self.更新涵蓋率()
         self.更新地圖顯示()
         # 下一輪改變
         self.草地生成植物()
-        self.更新植物涵蓋率()
         self.空地生成草地()
         self.腐化植物分解者移動()
         self.處理植物死亡()
