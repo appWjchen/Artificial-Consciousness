@@ -33,6 +33,36 @@ class 生態環境物品類別:
         self.x = x
         self.y = y
 
+    def 隨機移動傳回新位置(self):
+        new_x = self.x
+        new_y = self.y
+        行為 = random.randint(1, 5)
+        if 行為 == 1:  # 向上
+            new_x = new_x - 1
+            new_y = new_y
+        elif 行為 == 2:  # 向下
+            new_x = new_x + 1
+            new_y = new_y
+        elif 行為 == 3:  # 向右
+            new_x = new_x
+            new_y = new_y + 1
+        elif 行為 == 4:  # 向左
+            new_x = new_x
+            new_y = new_y - 1
+        else:  # 不動
+            pass
+        # 超過上邊回到最下邊, 超過最下邊回到最上邊
+        if new_x < 0:
+            new_x = N_WORLD_HEIGHT - 1
+        elif new_x >= N_WORLD_HEIGHT:
+            new_x = 0
+        # 超過右邊回到最左邊, 超過最左邊回到最右邊
+        if new_y < 0:
+            new_y = N_WORLD_WIDTH - 1
+        elif new_y >= N_WORLD_WIDTH:
+            new_y = 0
+        return new_x, new_y
+
 
 class 草地類別(生態環境物品類別):
     最大植物生成機率 = 2
@@ -80,33 +110,7 @@ class 腐化植物分解者類別(生態環境物品類別):
 
     def 移動(self):
         global 腐化植物分解者進行分解數
-        new_x = self.x
-        new_y = self.y
-        行為 = random.randint(1, 5)
-        if 行為 == 1:  # 向上
-            new_x = new_x - 1
-            new_y = new_y
-        elif 行為 == 2:  # 向下
-            new_x = new_x + 1
-            new_y = new_y
-        elif 行為 == 3:  # 向右
-            new_x = new_x
-            new_y = new_y + 1
-        elif 行為 == 4:  # 向左
-            new_x = new_x
-            new_y = new_y - 1
-        else:  # 不動
-            pass
-        # 超過上邊回到最下邊, 超過最下邊回到最上邊
-        if new_x < 0:
-            new_x = N_WORLD_HEIGHT - 1
-        elif new_x >= N_WORLD_HEIGHT:
-            new_x = 0
-        # 超過右邊回到最左邊, 超過最左邊回到最右邊
-        if new_y < 0:
-            new_y = N_WORLD_WIDTH - 1
-        elif new_y >= N_WORLD_WIDTH:
-            new_y = 0
+        new_x, new_y = self.隨機移動傳回新位置()
         # 判斷移動到的格子是否為空地或腐化植物
         if 世界.格子[new_x][new_y] == -1:
             世界.格子[new_x][new_y] = self
@@ -127,7 +131,7 @@ class 地圖類別:
     count_map = 0
 
     def __init__(self):
-        self.格子 = []
+        self.地圖格子 = []
         self.產生空白地圖()
         # self.console = Console(width=N_WORLD + 4, height=N_WORLD + 2)
 
@@ -136,22 +140,22 @@ class 地圖類別:
             一排格子 = []
             for y in range(N_WORLD_WIDTH):
                 一排格子.append(" ")
-            self.格子.append(一排格子)
+            self.地圖格子.append(一排格子)
 
     def 清除地圖(self):
         for x in range(N_WORLD_HEIGHT):
             for y in range(N_WORLD_WIDTH):
-                self.格子[x][y] = " "
+                self.地圖格子[x][y] = " "
 
     def 設定(self, x, y, 形狀):
-        self.格子[x][y] = 形狀
+        self.地圖格子[x][y] = 形狀
 
     def 顯示(self):
         顯示地圖字串 = ""
         for x in range(N_WORLD_HEIGHT):
             一行字串 = ""
             for y in range(N_WORLD_WIDTH):
-                一行字串 = 一行字串 + self.格子[x][y]
+                一行字串 = 一行字串 + self.地圖格子[x][y]
             顯示地圖字串 = 顯示地圖字串 + 一行字串 + "\n"
 
         os.system("cls")
