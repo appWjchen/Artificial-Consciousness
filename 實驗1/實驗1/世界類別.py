@@ -12,7 +12,10 @@ from rich.panel import Panel
 
 
 class 地圖類別:
-    count_map = 0
+    視窗高度 = 20
+    視窗寬度 = 100
+    視窗左上角的世界X = 0
+    視窗左上角的世界Y = 0
 
     def __init__(self, 世界):
         self.世界 = 世界
@@ -37,10 +40,12 @@ class 地圖類別:
 
     def 顯示(self):
         顯示地圖字串 = ""
-        for x in range(self.世界.N_WORLD_HEIGHT):
+        最小顯示高度 = min(地圖類別.視窗高度, self.世界.N_WORLD_HEIGHT - 地圖類別.視窗左上角的世界X)
+        for x in range(最小顯示高度):
             一行字串 = ""
-            for y in range(self.世界.N_WORLD_WIDTH):
-                一行字串 = 一行字串 + self.地圖格子[x][y]
+            最小顯示寬度 = min(地圖類別.視窗寬度, self.世界.N_WORLD_WIDTH - 地圖類別.視窗左上角的世界Y)
+            for y in range(最小顯示寬度):
+                一行字串 = 一行字串 + self.地圖格子[地圖類別.視窗左上角的世界X + x][地圖類別.視窗左上角的世界Y + y]
             顯示地圖字串 = 顯示地圖字串 + 一行字串 + "\n"
 
         os.system("cls")
@@ -63,6 +68,7 @@ class 地圖類別:
             腐化植物分解者死亡時平均移動數 = self.世界.腐化植物分解者死亡時總移動數 / self.世界.腐化植物分解者死亡數
         print("腐化植物分解者死亡時平均移動數 = ", 腐化植物分解者死亡時平均移動數)
         print(顯示地圖字串)
+        print("視窗左上角的世界 ( X , Y ) = (", 地圖類別.視窗左上角的世界X, ",", 地圖類別.視窗左上角的世界Y, ")")
         sleep(self.世界.SLEEP_TIME)
         """
         # 以下程式是用 rich console 顯示出地圖(各個格子的形狀字元)
@@ -93,11 +99,11 @@ class 世界類別:
     def __init__(self):
         # 定義除錯
         self.DEBUG_MODE = True
-        self.SLEEP_TIME = 0.2
+        self.SLEEP_TIME = 0.1
 
         # 定義世界的格子數為 N_WORLD_HEIGHT(x) * N_WORLD_WIDTH(y)
-        self.N_WORLD_WIDTH = 80
-        self.N_WORLD_HEIGHT = 20
+        self.N_WORLD_WIDTH = 200
+        self.N_WORLD_HEIGHT = 200
         self.腐化植物分解者進行分解數 = 0
         self.產生空世界()
         self.地圖 = 地圖類別(self)
@@ -224,8 +230,8 @@ class 世界類別:
 
     def 隨機生成腐化植物分解者(self):
         不超過100迴圈計數 = 0
-        # 若一直沒有空間生成 N_WORLD_HEIGHT 個腐化植物分解者, 迴圈將不停止
-        while len(self.腐化植物分解者列表) < self.N_WORLD_HEIGHT:
+        # 若一直沒有空間生成 N_WORLD_WIDTH 個腐化植物分解者, 迴圈將不停止
+        while len(self.腐化植物分解者列表) < self.N_WORLD_WIDTH:
             腐化植物分解者 = 腐化植物分解者類別(self)
             x, y = 腐化植物分解者.位置()
             if self.地面格子[x][y] == -1:
