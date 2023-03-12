@@ -2,6 +2,11 @@
 
 
 class 生態環境物品類別:
+    草地形狀="."
+    植物形狀 = "♀"
+    腐化植物形狀 = "▲"
+    腐化植物分解者形狀 = "█"
+
     def __init__(self, 世界):
         self.x = 0
         self.y = 0
@@ -55,7 +60,7 @@ class 草地類別(生態環境物品類別):
         super().__init__(世界)
         # self.x = random.randint(0, N_WORLD_HEIGHT - 1)  # 隨機生成 (x,y) 位置
         # self.y = random.randint(0, N_WORLD_WIDTH - 1)
-        self.形狀 = "."
+        self.形狀 = 生態環境物品類別.草地形狀
 
     def 生成植物(self):
         亂數 = random.randint(1, 100)
@@ -71,7 +76,7 @@ class 植物類別(生態環境物品類別):
     def __init__(self, 世界):
         super().__init__(世界)
         self.目前生命 = 0
-        self.形狀 = "$"
+        self.形狀 = 生態環境物品類別.植物形狀
 
 
 class 腐化植物類別(生態環境物品類別):
@@ -80,7 +85,7 @@ class 腐化植物類別(生態環境物品類別):
     def __init__(self, 世界):
         super().__init__(世界)
         self.目前生命 = 0
-        self.形狀 = "@"
+        self.形狀 = 生態環境物品類別.腐化植物形狀
 
 
 class 腐化植物分解者類別(生態環境物品類別):
@@ -92,7 +97,7 @@ class 腐化植物分解者類別(生態環境物品類別):
         super().__init__(世界)
         self.x = random.randint(0, self.世界.N_WORLD_HEIGHT - 1)  # 隨機生成 (x,y) 位置, 小心重複位置
         self.y = random.randint(0, self.世界.N_WORLD_WIDTH - 1)
-        self.形狀 = "M"
+        self.形狀 = 生態環境物品類別.腐化植物分解者形狀
         self.進食中 = False
         self.進食回合數 = 0
         self.能量 = 腐化植物分解者類別.預設能量
@@ -117,7 +122,7 @@ class 腐化植物分解者類別(生態環境物品類別):
         if new_x == self.x and new_y == self.y:  # 不移動
             return
         # 判斷移動到的地面格子是否為空地或腐化植物
-        if self.世界.地面格子[new_x][new_y] == -1 or self.世界.地面格子[new_x][new_y].形狀 == ".":
+        if self.世界.地面格子[new_x][new_y] == -1 or self.世界.地面格子[new_x][new_y].形狀 == 生態環境物品類別.草地形狀:
             if self.世界.地上格子[new_x][new_y] == -1:
                 self.世界.地上格子[new_x][new_y] = self
                 self.世界.地上格子[self.x][self.y] = -1
@@ -125,7 +130,7 @@ class 腐化植物分解者類別(生態環境物品類別):
                 self.y = new_y
                 self.能量 -= 1
                 self.移動數 += 1
-        elif self.世界.地面格子[new_x][new_y].形狀 == "@" and self.世界.地上格子[new_x][new_y] == -1:
+        elif self.世界.地面格子[new_x][new_y].形狀 == 生態環境物品類別.腐化植物形狀 and self.世界.地上格子[new_x][new_y] == -1:
             腐化植物 = self.世界.地面格子[new_x][new_y]
             self.世界.地面格子[new_x][new_y] = -1
             self.世界.地上格子[new_x][new_y] = self

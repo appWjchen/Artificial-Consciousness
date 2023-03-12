@@ -1,5 +1,6 @@
 ﻿import random
 import os
+from pynput import keyboard
 from time import sleep
 from 生態環境物品類別 import 草地類別, 植物類別, 腐化植物類別, 腐化植物分解者類別
 
@@ -13,7 +14,7 @@ from rich.panel import Panel
 
 class 地圖類別:
     視窗高度 = 20
-    視窗寬度 = 100
+    視窗寬度 = 40
     視窗左上角的世界X = 0
     視窗左上角的世界Y = 0
 
@@ -21,7 +22,40 @@ class 地圖類別:
         self.世界 = 世界
         self.地圖格子 = []
         self.產生空白地圖()
+        # 設定非同步按鍵讀取函式
+        self.listener = keyboard.Listener(
+            on_press=self.on_press, on_release=self.on_release
+        )
+        self.listener.start()
         # self.console = Console(width=N_WORLD + 4, height=N_WORLD + 2)
+
+    def on_press(self, key):
+        try:
+            # 要取一次 key 製造 except AttributeError
+            p = key.char
+
+        except AttributeError:
+            if key == keyboard.Key.left:
+                地圖類別.視窗左上角的世界Y -= 1
+                if 地圖類別.視窗左上角的世界Y < 0:
+                    地圖類別.視窗左上角的世界Y = 0
+            elif key == keyboard.Key.right:
+                地圖類別.視窗左上角的世界Y += 1
+                if 地圖類別.視窗左上角的世界Y > (self.世界.N_WORLD_WIDTH - 地圖類別.視窗寬度):
+                    地圖類別.視窗左上角的世界Y = self.世界.N_WORLD_WIDTH - 地圖類別.視窗寬度
+            elif key == keyboard.Key.up:
+                地圖類別.視窗左上角的世界X -= 1
+                if 地圖類別.視窗左上角的世界X < 0:
+                    地圖類別.視窗左上角的世界X = 0
+            elif key == keyboard.Key.down:
+                地圖類別.視窗左上角的世界X += 1
+                if 地圖類別.視窗左上角的世界X > (self.世界.N_WORLD_HEIGHT - 地圖類別.視窗高度):
+                    地圖類別.視窗左上角的世界X = self.世界.N_WORLD_HEIGHT - 地圖類別.視窗高度
+            else:
+                pass
+
+    def on_release(self, key):
+        pass
 
     def 產生空白地圖(self):
         for x in range(self.世界.N_WORLD_HEIGHT):
@@ -99,7 +133,7 @@ class 世界類別:
     def __init__(self):
         # 定義除錯
         self.DEBUG_MODE = True
-        self.SLEEP_TIME = 0.1
+        self.SLEEP_TIME = 0.2
 
         # 定義世界的格子數為 N_WORLD_HEIGHT(x) * N_WORLD_WIDTH(y)
         self.N_WORLD_WIDTH = 200
