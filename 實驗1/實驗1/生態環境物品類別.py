@@ -84,15 +84,38 @@ class 腐化植物類別(生態環境物品類別):
 
 
 class 腐化植物分解者類別(生態環境物品類別):
+    預設進食回合數 = 2
+    預設能量 = 20
+    預設進食獲取能量 = 10
+
     def __init__(self, 世界):
         super().__init__(世界)
         self.x = random.randint(0, self.世界.N_WORLD_HEIGHT - 1)  # 隨機生成 (x,y) 位置, 小心重複位置
         self.y = random.randint(0, self.世界.N_WORLD_WIDTH - 1)
         self.形狀 = "M"
+        self.進食中 = False
+        self.進食回合數 = 0
+        self.能量 = 腐化植物分解者類別.預設能量
+        self.移動數 = 0
+
+    def 處理死亡(self):
+        if self.能量 == 0:  # 能量用完就算死了, 記錄移動總數, 重設能量
+            self.世界.腐化植物分解者死亡數 += 1
+            self.世界.腐化植物分解者死亡時總移動數 += self.移動數
+            self.能量 = 腐化植物分解者類別.預設能量
+            self.移動數 = 0
 
     def 移動(self):
         global 腐化植物分解者進行分解數
+        if self.進食中:
+            self.進食回合數 -= 1
+            if self.進食回合數 == 0:
+                self.能量 += 腐化植物分解者類別.預設進食獲取能量
+                self.進食中 = False
+            return
         new_x, new_y = self.隨機移動傳回新位置()
+        if new_x == self.x and new_y == self.y:  # 不移動
+            return
         # 判斷移動到的地面格子是否為空地或腐化植物
         if self.世界.地面格子[new_x][new_y] == -1 or self.世界.地面格子[new_x][new_y].形狀 == ".":
             if self.世界.地上格子[new_x][new_y] == -1:
@@ -100,6 +123,8 @@ class 腐化植物分解者類別(生態環境物品類別):
                 self.世界.地上格子[self.x][self.y] = -1
                 self.x = new_x
                 self.y = new_y
+                self.能量 -= 1
+                self.移動數 += 1
         elif self.世界.地面格子[new_x][new_y].形狀 == "@" and self.世界.地上格子[new_x][new_y] == -1:
             腐化植物 = self.世界.地面格子[new_x][new_y]
             self.世界.地面格子[new_x][new_y] = -1
@@ -108,4 +133,9 @@ class 腐化植物分解者類別(生態環境物品類別):
             self.世界.腐化植物列表.remove(腐化植物)
             self.x = new_x
             self.y = new_y
+            self.能量 -= 1
+            self.移動數 += 1
             self.世界.腐化植物分解者進行分解數 += 1
+            self.進食回合數 = 腐化植物分解者類別.預設進食回合數
+            self.進食中 = True
+        self.處理死亡()

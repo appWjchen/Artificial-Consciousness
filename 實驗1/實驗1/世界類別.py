@@ -58,6 +58,10 @@ class 地圖類別:
             " %",
         )
         print("腐化植物分解者進行分解數 = ", self.世界.腐化植物分解者進行分解數)
+        腐化植物分解者死亡時平均移動數 = "?"
+        if self.世界.腐化植物分解者死亡數 != 0:
+            腐化植物分解者死亡時平均移動數 = self.世界.腐化植物分解者死亡時總移動數 / self.世界.腐化植物分解者死亡數
+        print("腐化植物分解者死亡時平均移動數 = ", 腐化植物分解者死亡時平均移動數)
         print(顯示地圖字串)
         sleep(self.世界.SLEEP_TIME)
         """
@@ -88,7 +92,7 @@ class 世界類別:
 
     def __init__(self):
         # 定義除錯
-        self.DEBUG_WORLD = True
+        self.DEBUG_MODE = True
         self.SLEEP_TIME = 0.2
 
         # 定義世界的格子數為 N_WORLD_HEIGHT(x) * N_WORLD_WIDTH(y)
@@ -107,6 +111,8 @@ class 世界類別:
         self.腐化植物分解者列表 = []  # 保持個數 = N_WORLD_HEIGHT
         self.隨機生成腐化植物分解者()
         self.迴圈數 = 0
+        self.腐化植物分解者死亡數 = 0
+        self.腐化植物分解者死亡時總移動數 = 0
 
     def 產生空世界(self):
         self.地面格子 = []
