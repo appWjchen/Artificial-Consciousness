@@ -141,14 +141,14 @@ class 世界類別:
     最大草地生成機率 = 1
     最小草地生成機率 = 0
     草地生成機率 = 最大草地生成機率  # 初始生成機率為 1% , 以植物含蓋率 5% 動態調整此機率
-    預設草地涵蓋率 = 20
-    預設植物涵蓋率 = 5
+    預設草地涵蓋率 = 10
+    預設植物涵蓋率 = 1
 
     def __init__(self):
         os.system("cls")
         # 定義除錯
         self.DEBUG_MODE = True
-        self.SLEEP_TIME = 0.1
+        self.SLEEP_TIME = 0.2
 
         # 定義世界的格子數為 N_WORLD_HEIGHT(x) * N_WORLD_WIDTH(y)
         self.N_WORLD_WIDTH = 100
@@ -310,10 +310,16 @@ class 世界類別:
             x, y = 腐化物.位置()
             self.氣味場.產生氣味(x, y, 氣味類別.腐化物, 氣味類別.腐化物預設濃度)
 
+    def 產生腐化物分解者氣味場(self):
+        for 腐化物分解者 in self.腐化物分解者列表:
+            x, y = 腐化物分解者.位置()
+            self.氣味場.產生氣味(x, y, 氣味類別.腐化物分解者, 氣味類別.腐化物分解者預設濃度)
+
     def 產生氣味場(self):
         self.產生草地氣味場()
         self.產生植物氣味場()
         self.產生腐化物氣味場()
+        self.產生腐化物分解者氣味場()
 
     def 更新世界(self):
         self.更新涵蓋率()
