@@ -66,13 +66,42 @@ class 氣味場類別:
         if 氣味列表 == []:
             return " "
         else:
-            return "▫"
+            大小的最大值 = 0
+            氣味來源 = 0
+            for 氣味 in 氣味列表:
+                if 氣味.大小 > 大小的最大值:
+                    氣味來源=氣味.來源
+                    大小的最大值 = 氣味.大小
+            if 大小的最大值 == 1:
+                if 氣味來源==氣味類別.腐化物:
+                    return "\033[31m◦\033[0m"
+                else:
+                    return "◦"
+            elif 大小的最大值 == 2:
+                if 氣味來源==氣味類別.腐化物:
+                    return "\033[31m◌\033[0m"
+                else:
+                    return "◌"
+            elif 大小的最大值 == 3:
+                if 氣味來源==氣味類別.腐化物:
+                    return "\033[31m◯\033[0m"
+                else:
+                    return "◯"
+        return " "
 
     def 更新氣味傳播(self):
+        新氣味場格子 = [[[] for _ in range(self.地圖高度)] for _ in range(self.地圖寬度)]
         for x in range(self.地圖高度):
             for y in range(self.地圖寬度):
                 氣味列表 = self.氣味格子[x][y]
                 for 氣味 in 氣味列表:
-                    氣味.大小 -= 1  # 每過一回合氣味大小減1
-                    if 氣味.大小 <= 0:  # 濃度大小為 0 時, 刪除讓氣味
-                        self.氣味格子[x][y].remove(氣味)
+                    if 氣味.方向 == 0:  # 更新氣味大小
+                        氣味.大小 -= 1  # 每過一回合氣味大小減1
+                        新氣味場格子[x][y].append(氣味)
+        for x in range(self.地圖高度):
+            for y in range(self.地圖寬度):
+                氣味列表 = 新氣味場格子[x][y]
+                for 氣味 in 氣味列表:
+                    if 氣味.大小 <= 0:
+                        新氣味場格子[x][y].remove(氣味)
+        self.氣味格子 = 新氣味場格子
