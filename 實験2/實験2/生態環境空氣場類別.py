@@ -55,11 +55,17 @@ class 氣味場類別:
         self.產生空的氣味場()
 
     def 產生空的氣味場(self):
+        self.氣味格子 = [[[] for _ in range(self.地圖寬度)] for _ in range(self.地圖高度)]
+        '''
+        # 上述程式和下列程式功能相同, 除了此處改為一行的寫法, 其它地方不修改
+        # 下列的寫法是讓某些人可以了解簡單的迴圈寫法
+
         for x in range(self.地圖高度):
             一排氣味格子 = []
             for y in range(self.地圖寬度):
                 一排氣味格子.append([])
             self.氣味格子.append(一排氣味格子)
+        '''
 
     def 產生氣味(self, x, y, 來源, 大小):
         if 大小 > 氣味類別.最大容許濃度:
