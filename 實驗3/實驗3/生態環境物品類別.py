@@ -107,6 +107,7 @@ class 腐化物分解者類別(生態環境物品類別):
         self.能量 = 腐化物分解者類別.預設能量
         self.生命回合數 = 0
         self.生命代數 = 0
+        self.刻數 = 0
 
     def 處理死亡(self):
         self.生命回合數 += 1
@@ -118,6 +119,12 @@ class 腐化物分解者類別(生態環境物品類別):
             self.生命代數 += 1
 
     def 移動(self):
+        self.刻數 += 1
+        if self.刻數 == 5:
+            self.刻數 = 0
+        else:
+            return
+
         global 腐化物分解者進行分解數
         if self.進食中:
             self.進食回合數 -= 1
