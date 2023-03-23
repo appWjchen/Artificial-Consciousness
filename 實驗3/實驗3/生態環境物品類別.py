@@ -1,5 +1,7 @@
 ﻿import random
 from 可儲存物件類別 import 可儲存物件類別
+from 神經網路類別 import 嗅覺感測器類別
+from 生態環境空氣場類別 import *
 
 
 class 生態環境物品類別(可儲存物件類別):
@@ -91,7 +93,7 @@ class 腐化物類別(生態環境物品類別):
 
 
 class 腐化物分解者類別(生態環境物品類別):
-    預設進食回合數 = 2
+    預設進食刻數 = 20
     預設能量 = 200
     預設進食獲取能量 = 100
     預設停止消秏能量 = 1
@@ -103,70 +105,90 @@ class 腐化物分解者類別(生態環境物品類別):
         self.y = random.randint(0, self.世界.N_WORLD_WIDTH - 1)
         self.形狀 = 生態環境物品類別.腐化物分解者形狀
         self.進食中 = False
-        self.進食回合數 = 0
+        self.進食刻數 = 0
         self.能量 = 腐化物分解者類別.預設能量
-        self.生命回合數 = 0
+        self.生命刻數 = 0
         self.生命代數 = 0
         self.刻數 = 0
+        self.產生嗅覺感測器()
+
+    def 產生嗅覺感測器(self):
+        # 分解者沒有前後之分, 嗅覺感測器四面八方都有, 共八個
+        self.嗅覺感測器上 = 嗅覺感測器類別()
+        self.嗅覺感測器右上 = 嗅覺感測器類別()
+        self.嗅覺感測器右 = 嗅覺感測器類別()
+        self.嗅覺感測器右下 = 嗅覺感測器類別()
+        self.嗅覺感測器下 = 嗅覺感測器類別()
+        self.嗅覺感測器左下 = 嗅覺感測器類別()
+        self.嗅覺感測器左 = 嗅覺感測器類別()
+        self.嗅覺感測器左上 = 嗅覺感測器類別()
+
+    def 感測嗅覺信息(self):
+        self.嗅覺感測器上.設定大小(self.世界.氣味場.傳回格子氣味(self.x - 1, self.y, 氣味類別.腐化物))
+        self.嗅覺感測器右上.設定大小(self.世界.氣味場.傳回格子氣味(self.x - 1, self.y + 1, 氣味類別.腐化物))
+        self.嗅覺感測器右.設定大小(self.世界.氣味場.傳回格子氣味(self.x, self.y + 1, 氣味類別.腐化物))
+        self.嗅覺感測器右下.設定大小(self.世界.氣味場.傳回格子氣味(self.x + 1, self.y + 1, 氣味類別.腐化物))
+        self.嗅覺感測器下.設定大小(self.世界.氣味場.傳回格子氣味(self.x + 1, self.y, 氣味類別.腐化物))
+        self.嗅覺感測器左下.設定大小(self.世界.氣味場.傳回格子氣味(self.x + 1, self.y - 1, 氣味類別.腐化物))
+        self.嗅覺感測器左.設定大小(self.世界.氣味場.傳回格子氣味(self.x, self.y - 1, 氣味類別.腐化物))
+        self.嗅覺感測器左上.設定大小(self.世界.氣味場.傳回格子氣味(self.x - 1, self.y - 1, 氣味類別.腐化物))
 
     def 處理死亡(self):
-        self.生命回合數 += 1
         if self.能量 <= 0:  # 能量用完就算死了, 記錄移動總數, 重設能量
             self.世界.腐化物分解者死亡數 += 1
-            self.世界.腐化物分解者死亡時總生命回合數 += self.生命回合數
+            self.世界.腐化物分解者死亡時總生命刻數 += self.生命刻數
             self.能量 = 腐化物分解者類別.預設能量
-            self.生命回合數 = 0
+            self.生命刻數 = 0
+            self.刻數 = 0
             self.生命代數 += 1
 
     def 移動(self):
         self.刻數 += 1
-        if self.刻數 == 5:
-            self.刻數 = 0
-        else:
-            return
-
+        self.生命刻數 += 1
+        # 每刻會呼叫一次移動, 進食改為 20 刻(即2回合)
         global 腐化物分解者進行分解數
         if self.進食中:
-            self.進食回合數 -= 1
+            self.進食刻數 -= 1
             new_x, new_y = self.x, self.y  # 進食中不能移動
-            if self.進食回合數 == 0:
+            if self.進食刻數 == 0:
                 self.能量 += 腐化物分解者類別.預設進食獲取能量
-                self.能量 -= 腐化物分解者類別.預設停止消秏能量
+                self.能量 -= 腐化物分解者類別.預設停止消秏能量 / 10
                 self.進食中 = False
                 self.處理死亡()
             return
-        else:
+        if self.刻數 % 10 == 0:
+            self.感測嗅覺信息()
             new_x, new_y = self.隨機移動傳回新位置()
-        if new_x == self.x and new_y == self.y:  # 不移動
-            self.能量 -= 腐化物分解者類別.預設停止消秏能量
-            self.處理死亡()
-            return
-        # 判斷移動到的地面格子是否為空地或腐化物
-        if (
-            self.世界.地面格子[new_x][new_y] == -1
-            or self.世界.地面格子[new_x][new_y].形狀 == 生態環境物品類別.草地形狀
-        ):  # 前往的格子是空地 或者 草地, 注意 or 順序不能相反, 因為self.世界.地面格子[new_x][new_y].形狀有可能不存在
-            if self.世界.地上格子[new_x][new_y] == -1:
+            if new_x == self.x and new_y == self.y:  # 不移動
+                self.能量 -= 腐化物分解者類別.預設停止消秏能量
+                self.處理死亡()
+                return
+            # 判斷移動到的地面格子是否為空地或腐化物
+            if (
+                self.世界.地面格子[new_x][new_y] == -1
+                or self.世界.地面格子[new_x][new_y].形狀 == 生態環境物品類別.草地形狀
+            ):  # 前往的格子是空地 或者 草地, 注意 or 順序不能相反, 因為self.世界.地面格子[new_x][new_y].形狀有可能不存在
+                if self.世界.地上格子[new_x][new_y] == -1:
+                    self.世界.地上格子[new_x][new_y] = self
+                    self.世界.地上格子[self.x][self.y] = -1
+                    self.x = new_x
+                    self.y = new_y
+                    self.能量 -= 腐化物分解者類別.預設移動消秏能量
+            elif (
+                self.世界.地面格子[new_x][new_y].形狀 == 生態環境物品類別.腐化物形狀
+                and self.世界.地上格子[new_x][new_y] == -1
+            ):  # 前往的格子是腐化物 且 上面沒有其它生物, 注意 if 和 elif 順序不能交換, 要先確定格子不是空地, 否則會出錯(空地沒有形狀)
+                腐化物 = self.世界.地面格子[new_x][new_y]
+                self.世界.地面格子[new_x][new_y] = -1
                 self.世界.地上格子[new_x][new_y] = self
                 self.世界.地上格子[self.x][self.y] = -1
+                self.世界.腐化物列表.remove(腐化物)
                 self.x = new_x
                 self.y = new_y
                 self.能量 -= 腐化物分解者類別.預設移動消秏能量
-        elif (
-            self.世界.地面格子[new_x][new_y].形狀 == 生態環境物品類別.腐化物形狀
-            and self.世界.地上格子[new_x][new_y] == -1
-        ):  # 前往的格子是腐化物 且 上面沒有其它生物, 注意 if 和 elif 順序不能交換, 要先確定格子不是空地, 否則會出錯(空地沒有形狀)
-            腐化物 = self.世界.地面格子[new_x][new_y]
-            self.世界.地面格子[new_x][new_y] = -1
-            self.世界.地上格子[new_x][new_y] = self
-            self.世界.地上格子[self.x][self.y] = -1
-            self.世界.腐化物列表.remove(腐化物)
-            self.x = new_x
-            self.y = new_y
-            self.能量 -= 腐化物分解者類別.預設移動消秏能量
-            self.世界.腐化物分解者進行分解數 += 1
-            self.進食回合數 = 腐化物分解者類別.預設進食回合數
-            self.進食中 = True
-        else:  # 不能移到要前往的格子, 算不移動
-            self.能量 -= 腐化物分解者類別.預設停止消秏能量
-        self.處理死亡()
+                self.世界.腐化物分解者進行分解數 += 1
+                self.進食刻數 = 腐化物分解者類別.預設進食刻數
+                self.進食中 = True
+            else:  # 不能移到要前往的格子, 算不移動
+                self.能量 -= 腐化物分解者類別.預設停止消秏能量
+            self.處理死亡()

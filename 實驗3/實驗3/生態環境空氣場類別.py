@@ -113,7 +113,7 @@ class 氣味場類別:
                     return "◯"
         return " "
 
-    def 產生傳播氣味(self, x, y, 方向, 大小, 來源):
+    def 檢查xy值(self, x, y):
         new_x = x
         new_y = y
         if x < 0:
@@ -124,6 +124,10 @@ class 氣味場類別:
             new_y = self.地圖寬度 - 1
         elif y > self.地圖寬度 - 1:
             new_y = 0
+        return new_x, new_y
+
+    def 產生傳播氣味(self, x, y, 方向, 大小, 來源):
+        new_x, new_y = self.檢查xy值(x, y)
         氣味 = 氣味類別(new_x, new_y, 來源, 大小, 方向)
         return 氣味
 
@@ -226,3 +230,13 @@ class 氣味場類別:
                     if 氣味.大小 <= 0:
                         新氣味場格子[x][y].remove(氣味)
         self.氣味格子 = 新氣味場格子
+
+    def 傳回格子氣味(self, x, y, 來源):
+        new_x, new_y = self.檢查xy值(x, y)
+        氣味列表 = self.氣味格子[new_x][new_y]
+        找到氣味最大值 = 0
+        for 氣味 in 氣味列表:
+            if 氣味.來源 == 來源:
+                if 氣味.大小 > 找到氣味最大值:
+                    找到氣味最大值 = 氣味.大小
+        return 找到氣味最大值
