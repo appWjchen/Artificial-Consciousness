@@ -141,6 +141,7 @@ class 地圖類別:
 
 
 class 世界類別(可儲存物件類別):
+    DEBUG_MODE = False
     最大草地生成機率 = 1
     最小草地生成機率 = 0
     草地生成機率 = 最大草地生成機率  # 初始生成機率為 1% , 以植物含蓋率 5% 動態調整此機率
@@ -151,12 +152,16 @@ class 世界類別(可儲存物件類別):
         super().__init__()
         os.system("cls")
         # 定義除錯
-        self.DEBUG_MODE = True
         self.SLEEP_TIME = 0.2
 
         # 定義世界的格子數為 N_WORLD_HEIGHT(x) * N_WORLD_WIDTH(y)
-        self.N_WORLD_WIDTH = 100
-        self.N_WORLD_HEIGHT = 100
+        if 世界類別.DEBUG_MODE:
+            self.SLEEP_TIME = 0.1
+            self.N_WORLD_WIDTH = 40
+            self.N_WORLD_HEIGHT = 20
+        else:
+            self.N_WORLD_WIDTH = 100
+            self.N_WORLD_HEIGHT = 100
         self.腐化物分解者進行分解數 = 0
         self.產生空世界()
         self.地圖 = 地圖類別(self)
@@ -286,16 +291,28 @@ class 世界類別(可儲存物件類別):
 
     def 隨機生成腐化物分解者(self):
         不超過100迴圈計數 = 0
-        # 若一直沒有空間生成 N_WORLD_WIDTH 個腐化物分解者, 迴圈將不停止
-        while len(self.腐化物分解者列表) < self.N_WORLD_WIDTH:
-            腐化物分解者 = 腐化物分解者類別(self)
-            x, y = 腐化物分解者.位置()
-            if self.地面格子[x][y] == -1:
-                self.地上格子[x][y] = 腐化物分解者
-                self.腐化物分解者列表.append(腐化物分解者)
-            不超過100迴圈計數 += 1
-            if 不超過100迴圈計數 > 100:
-                break
+        if 世界類別.DEBUG_MODE:
+            # 若一直沒有空間生成 N_WORLD_WIDTH 個腐化物分解者, 迴圈將不停止
+            while len(self.腐化物分解者列表) < 1:
+                腐化物分解者 = 腐化物分解者類別(self)
+                x, y = 腐化物分解者.位置()
+                if self.地面格子[x][y] == -1:
+                    self.地上格子[x][y] = 腐化物分解者
+                    self.腐化物分解者列表.append(腐化物分解者)
+                不超過100迴圈計數 += 1
+                if 不超過100迴圈計數 > 100:
+                    break
+        else:
+            # 若一直沒有空間生成 N_WORLD_WIDTH 個腐化物分解者, 迴圈將不停止
+            while len(self.腐化物分解者列表) < self.N_WORLD_WIDTH:
+                腐化物分解者 = 腐化物分解者類別(self)
+                x, y = 腐化物分解者.位置()
+                if self.地面格子[x][y] == -1:
+                    self.地上格子[x][y] = 腐化物分解者
+                    self.腐化物分解者列表.append(腐化物分解者)
+                不超過100迴圈計數 += 1
+                if 不超過100迴圈計數 > 100:
+                    break
 
     def 腐化物分解者移動(self):
         for 腐化物分解者 in self.腐化物分解者列表:
