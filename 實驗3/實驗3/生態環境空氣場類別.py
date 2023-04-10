@@ -92,25 +92,25 @@ class 氣味場類別:
                     大小的最大值 = 氣味.大小
             if 大小的最大值 == 1:
                 if 氣味來源 == 氣味類別.腐化物:
-                    return "\033[31m◦\033[0m"
+                    return "\033[31m1\033[0m"
                 elif 氣味來源 == 氣味類別.腐化物分解者:
-                    return "\033[32m◦\033[0m"
+                    return "\033[32m1\033[0m"
                 else:
-                    return "◦"
+                    return "1"
             elif 大小的最大值 == 2:
                 if 氣味來源 == 氣味類別.腐化物:
-                    return "\033[31m◌\033[0m"
+                    return "\033[31m2\033[0m"
                 elif 氣味來源 == 氣味類別.腐化物分解者:
-                    return "\033[32m◌\033[0m"
+                    return "\033[32m2\033[0m"
                 else:
-                    return "◌"
+                    return "2"
             elif 大小的最大值 == 3:
                 if 氣味來源 == 氣味類別.腐化物:
-                    return "\033[31m◯\033[0m"
+                    return "\033[31m3\033[0m"
                 elif 氣味來源 == 氣味類別.腐化物分解者:
-                    return "\033[32m◯\033[0m"
+                    return "\033[32m3\033[0m"
                 else:
-                    return "◯"
+                    return "3"
         return " "
 
     def 檢查xy值(self, x, y):
