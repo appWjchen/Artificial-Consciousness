@@ -152,7 +152,7 @@ class 世界類別(可儲存物件類別):
         super().__init__()
         os.system("cls")
         # 定義除錯
-        self.SLEEP_TIME = 0.2
+        self.SLEEP_TIME = 0.1
 
         # 定義世界的格子數為 N_WORLD_HEIGHT(x) * N_WORLD_WIDTH(y)
         if 世界類別.DEBUG_MODE:
@@ -315,6 +315,7 @@ class 世界類別(可儲存物件類別):
                     break
 
     def 腐化物分解者移動(self):
+        # 分解者移動有一大問題, 若二個微生物移動到同一格子, 先出生的分解者有移動優先權, 目前暫時先如此行, 以後再處理碰撞問題
         for 腐化物分解者 in self.腐化物分解者列表:
             腐化物分解者.移動()
 
@@ -364,3 +365,5 @@ class 世界類別(可儲存物件類別):
             self.處理植物死亡()
             self.處理腐化物死亡()
             self.回合數 += 1
+            if self.回合數==200:
+                self.腐化物分解者平均生命回合數 = self.腐化物分解者死亡時總生命刻數 / 10 / self.腐化物分解者死亡數
