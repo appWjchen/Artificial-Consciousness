@@ -96,7 +96,7 @@ class 神經網路類別(可儲存物件類別):
 
         self.信息位置 += 1
         if self.信息位置 == self.層數:
-            if True:
+            if False:
                 gotoxy(60, 10)
                 if self.神經元群組[self.信息位置 - 1][0].輸出 > 0.5:
                     print("前進", " " * 10)
