@@ -25,6 +25,19 @@ class 生態環境物品類別(可儲存物件類別):
         self.x = x
         self.y = y
 
+    def 修正超越邊界的位置(self, new_x, new_y):
+        # 超過上邊回到最下邊, 超過最下邊回到最上邊
+        if new_x < 0:
+            new_x = self.世界.N_WORLD_HEIGHT - 1
+        elif new_x >= self.世界.N_WORLD_HEIGHT:
+            new_x = 0
+        # 超過右邊回到最左邊, 超過最左邊回到最右邊
+        if new_y < 0:
+            new_y = self.世界.N_WORLD_WIDTH - 1
+        elif new_y >= self.世界.N_WORLD_WIDTH:
+            new_y = 0
+        return new_x, new_y
+
     def 隨機移動傳回新位置(self):
         new_x = self.x
         new_y = self.y
@@ -43,16 +56,7 @@ class 生態環境物品類別(可儲存物件類別):
             new_y = new_y - 1
         else:  # 不動
             pass
-        # 超過上邊回到最下邊, 超過最下邊回到最上邊
-        if new_x < 0:
-            new_x = self.世界.N_WORLD_HEIGHT - 1
-        elif new_x >= self.世界.N_WORLD_HEIGHT:
-            new_x = 0
-        # 超過右邊回到最左邊, 超過最左邊回到最右邊
-        if new_y < 0:
-            new_y = self.世界.N_WORLD_WIDTH - 1
-        elif new_y >= self.世界.N_WORLD_WIDTH:
-            new_y = 0
+        new_x, new_y = self.修正超越邊界的位置(new_x, new_y)
         return new_x, new_y
 
 
@@ -168,32 +172,36 @@ class 腐化物分解者類別(生態環境物品類別):
             self.生命代數 += 1
 
     def 根據神經網路進行移動(self):
-        前進 = False
-        停止 = False
-        if self.神經網路.神經元群組[self.神經網路.層數 - 1][0].輸出 > 0.5:
-            前進 = True
-        else:
-            停止 = True
+        if self.神經網路.神經元群組[self.神經網路.層數 - 1][0].輸出 <= 0.5:
+            # 停止
+            new_x, new_y = self.x, self.y
+        # 前進
         if (
             self.神經網路.神經元群組[self.神經網路.層數 - 1][1].輸出 <= 0.5
             and self.神經網路.神經元群組[self.神經網路.層數 - 1][2].輸出 <= 0.5
         ):
-            上 = True
+            # 上
+            new_x, new_y = self.x - 1, self.y
         elif (
             self.神經網路.神經元群組[self.神經網路.層數 - 1][1].輸出 <= 0.5
             and self.神經網路.神經元群組[self.神經網路.層數 - 1][2].輸出 > 0.5
         ):
-            右 = True
+            # 右
+            new_x, new_y = self.x, self.y + 1
         elif (
             self.神經網路.神經元群組[self.神經網路.層數 - 1][1].輸出 > 0.5
             and self.神經網路.神經元群組[self.神經網路.層數 - 1][2].輸出 <= 0.5
         ):
-            下 = True
+            # 下
+            new_x, new_y = self.x + 1, self.y
         elif (
             self.神經網路.神經元群組[self.神經網路.層數 - 1][1].輸出 > 0.5
             and self.神經網路.神經元群組[self.神經網路.層數 - 1][2].輸出 > 0.5
         ):
-            左 = True
+            # 左
+            new_x, new_y = self.x, self.y - 1
+        new_x, new_y = self.修正超越邊界的位置(new_x, new_y)
+        return new_x, new_y
 
     def 移動(self):
         # 分解者移動有一大問題, 若二個微生物移動到同一格子, 先出生的分解者有移動優先權, 目前暫時先如此行, 以後再處理碰撞問題
@@ -221,7 +229,9 @@ class 腐化物分解者類別(生態環境物品類別):
                         self.移動刻數 += 1
                         if self.移動刻數 == 5:  # 移動須要花費 5 刻數
                             # 根據神經網路進行移動
-                            self.根據神經網路進行移動()
+                            new_x, new_y = self.根據神經網路進行移動()
+                            # 新的位置要再檢查是否可移過去
+
                             # 移動結束
                             self.移動中 = False
                             self.神經網路.輸出確定 = False
