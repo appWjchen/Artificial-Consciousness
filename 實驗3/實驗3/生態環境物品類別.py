@@ -120,7 +120,6 @@ class 腐化物分解者類別(生態環境物品類別):
         self.產生神經網路()
 
     def 產生神經網路(self):
-
         # 未來生態環境物品可能會分生植物類別及動物類別, 目前先不分
 
         self.神經網路 = 神經網路類別(3, 8)  # 產生一個有 3 層神經元群組的神經網路, 共有 8 個輸入
@@ -167,9 +166,14 @@ class 腐化物分解者類別(生態環境物品類別):
             self.世界.腐化物分解者死亡數 += 1
             self.世界.腐化物分解者死亡時總生命刻數 += self.生命刻數
             self.能量 = 腐化物分解者類別.預設能量
+            # 重生
             self.生命刻數 = 0
             self.刻數 = 0
             self.生命代數 += 1
+            self.進食中 = False
+            self.神經網路.信息位置 = 0
+            self.神經網路.信息傳播中 = False
+            self.神經網路.輸出確定 = False
 
     def 根據神經網路進行移動(self):
         if self.神經網路.神經元群組[self.神經網路.層數 - 1][0].輸出 <= 0.5:
@@ -203,6 +207,41 @@ class 腐化物分解者類別(生態環境物品類別):
         new_x, new_y = self.修正超越邊界的位置(new_x, new_y)
         return new_x, new_y
 
+    def 移動是否成功(self, new_x, new_y):
+        傳回值 = False
+        # 判斷移動到的地面格子是否為空地或腐化物
+        if (
+            self.世界.地面格子[new_x][new_y] == -1
+            or self.世界.地面格子[new_x][new_y].形狀 == 生態環境物品類別.草地形狀
+        ):
+            if self.世界.地上格子[new_x][new_y] == -1:
+                self.世界.地上格子[new_x][new_y] = self
+                self.世界.地上格子[self.x][self.y] = -1
+                self.x = new_x
+                self.y = new_y
+                self.能量 -= 腐化物分解者類別.預設移動消秏能量
+                傳回值 = True
+        elif (
+            self.世界.地面格子[new_x][new_y].形狀 == 生態環境物品類別.腐化物形狀
+            and self.世界.地上格子[new_x][new_y] == -1
+        ):  # 前往的格子是腐化物 且 上面沒有其它生物, 注意 if 和 elif 順序不能交換, 要先確定格子不是空地, 否則會出錯(空地沒有形狀)
+            腐化物 = self.世界.地面格子[new_x][new_y]
+            self.世界.地面格子[new_x][new_y] = -1
+            self.世界.地上格子[new_x][new_y] = self
+            self.世界.地上格子[self.x][self.y] = -1
+            self.世界.腐化物列表.remove(腐化物)
+            self.x = new_x
+            self.y = new_y
+            self.能量 -= 腐化物分解者類別.預設移動消秏能量
+            self.世界.腐化物分解者進行分解數 += 1
+            self.進食刻數 = 腐化物分解者類別.預設進食刻數
+            self.進食中 = True
+            傳回值 = True
+        else:  # 不能移到要前往的格子, 算不移動
+            self.能量 -= 腐化物分解者類別.預設停止消秏能量
+            傳回值 = False
+        return 傳回值
+
     def 移動(self):
         # 分解者移動有一大問題, 若二個微生物移動到同一格子, 先出生的分解者有移動優先權, 目前暫時先如此行, 以後再處理碰撞問題
         if not self.神經網路建構完成:
@@ -231,7 +270,8 @@ class 腐化物分解者類別(生態環境物品類別):
                             # 根據神經網路進行移動
                             new_x, new_y = self.根據神經網路進行移動()
                             # 新的位置要再檢查是否可移過去
-
+                            移動成功 = self.移動是否成功(new_x, new_y)  # 目前成功失敗並沒有用到
+                            self.處理死亡()
                             # 移動結束
                             self.移動中 = False
                             self.神經網路.輸出確定 = False
@@ -263,32 +303,5 @@ class 腐化物分解者類別(生態環境物品類別):
                     self.能量 -= 腐化物分解者類別.預設停止消秏能量
                     self.處理死亡()
                     return
-                # 判斷移動到的地面格子是否為空地或腐化物
-                if (
-                    self.世界.地面格子[new_x][new_y] == -1
-                    or self.世界.地面格子[new_x][new_y].形狀 == 生態環境物品類別.草地形狀
-                ):  # 前往的格子是空地 或者 草地, 注意 or 順序不能相反, 因為self.世界.地面格子[new_x][new_y].形狀有可能不存在
-                    if self.世界.地上格子[new_x][new_y] == -1:
-                        self.世界.地上格子[new_x][new_y] = self
-                        self.世界.地上格子[self.x][self.y] = -1
-                        self.x = new_x
-                        self.y = new_y
-                        self.能量 -= 腐化物分解者類別.預設移動消秏能量
-                elif (
-                    self.世界.地面格子[new_x][new_y].形狀 == 生態環境物品類別.腐化物形狀
-                    and self.世界.地上格子[new_x][new_y] == -1
-                ):  # 前往的格子是腐化物 且 上面沒有其它生物, 注意 if 和 elif 順序不能交換, 要先確定格子不是空地, 否則會出錯(空地沒有形狀)
-                    腐化物 = self.世界.地面格子[new_x][new_y]
-                    self.世界.地面格子[new_x][new_y] = -1
-                    self.世界.地上格子[new_x][new_y] = self
-                    self.世界.地上格子[self.x][self.y] = -1
-                    self.世界.腐化物列表.remove(腐化物)
-                    self.x = new_x
-                    self.y = new_y
-                    self.能量 -= 腐化物分解者類別.預設移動消秏能量
-                    self.世界.腐化物分解者進行分解數 += 1
-                    self.進食刻數 = 腐化物分解者類別.預設進食刻數
-                    self.進食中 = True
-                else:  # 不能移到要前往的格子, 算不移動
-                    self.能量 -= 腐化物分解者類別.預設停止消秏能量
+                移動成功 = self.移動是否成功(new_x, new_y)  # 目前成功失敗並沒有用到
                 self.處理死亡()
